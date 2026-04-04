@@ -1,0 +1,11 @@
+src/components/FraudAlertCard.tsx(3,41): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/components/GraphView.tsx(4,24): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/components/Header.tsx(3,24): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/components/RiskGauge.tsx(3,24): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/components/StatsBar.tsx(3,24): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/components/TransactionFeed.tsx(3,41): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/hooks/useFirestoreStream.ts(17,8): error TS2307: Cannot find module 'firebase/firestore' or its corresponding type declarations.
+src/hooks/useFirestoreStream.ts(58,43): error TS7006: Parameter 'doc' implicitly has an 'any' type.
+src/hooks/useFirestoreStream.ts(65,10): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/lib/firebase.ts(6,40): error TS2307: Cannot find module 'firebase/app' or its corresponding type declarations.
+src/lib/firebase.ts(7,30): error TS2307: Cannot find module 'firebase/firestore' or its corresponding type declarations.
