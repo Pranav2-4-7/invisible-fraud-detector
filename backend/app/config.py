@@ -57,18 +57,18 @@ def init_firebase():
             _firebase_app = firebase_admin.initialize_app(cred, {
                 "projectId": settings.firebase_project_id,
             })
-            print(f"✅ Firebase initialized with credentials from {cred_path}")
+            print(f"[OK] Firebase initialized with credentials from {cred_path}")
         else:
             # Fallback: initialize without credentials (emulator / default)
             _firebase_app = firebase_admin.initialize_app(options={
                 "projectId": settings.firebase_project_id,
             })
-            print("⚠️  Firebase initialized WITHOUT credentials (mock mode)")
+            print("[WARN] Firebase initialized WITHOUT credentials (mock mode)")
 
         return _firebase_app
 
     except Exception as e:
-        print(f"⚠️  Firebase initialization failed: {e}")
+        print(f"[WARN] Firebase initialization failed: {e}")
         print("   Running in OFFLINE mode — Firebase features disabled.")
         return None
 

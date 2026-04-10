@@ -1,0 +1,32 @@
+# Invisible Fraud Detector — Logic & Implementation
+
+The Invisible Fraud Detector operates using a hybrid pipeline that combines Machine Learning (ML) with Heuristic Behavioral Analytics. 
+
+## 1. Machine Learning Layer (XGBoost)
+The core of the detection system is an XGBoost model trained on the IEEE-CIS Fraud Detection dataset. It identifies statistical anomalies across 30 primary features:
+
+- **Categorical Mappings:** Direct mappings for `card6` (card type), `M4` (matching info), and `id_17` (device/os markers).
+- **C-Features (Counts):** Represents historical frequencies of transactions, email associations, and address hits (e.g., `C1`, `C4`, `C14`).
+- **V-Features (Vesta):** Anonymized variables that capture complex relationships between the transaction and the infrastructure (e.g., `V257`, `V258`).
+
+## 2. Behavioral Engine (Real-Time Heuristics)
+Since raw datasets often lack specific travel or timing indicators, the Behavioral Engine calculates these in real-time by processing IP and Timestamp data.
+
+### Impossible Travel Detection
+- **Geolocation:** The system looks up the latitude and longitude of the current IP address.
+- **Distance Calculation:** It uses the **Haversine Formula** to find the distance (in km) between the current location and the location of the user's last recorded transaction.
+- **Velocity Check:** It calculates the implied speed (km/h) by dividing the distance by the time difference between the two events.
+- **Threshold:** If the speed exceeds 900 km/h (faster than a jet), it triggers an "Impossible Travel" alert.
+
+### Transaction Velocity
+- Tracks the number of transactions per user within a specific window (e.g., >3 transactions in 5 minutes).
+
+### Anomaly Timing
+- Transactions occurring during "unusual hours" (typically 2 AM – 5 AM UTC) are flagged with a medium severity risk.
+
+## 3. Data Integration & Analysis Pipeline
+1. **Simplified Input:** A user provides basic data (Amount, Location, Device).
+2. **Feature Transformation:** The `FeatureTransformer` hashes the location/device and applies multipliers to simple values to create the 30-feature vector the XGBoost model expects.
+3. **ML Inference:** XGBoost predicts a base probability (0.0 – 1.0).
+4. **Behavioral Overlay:** The Behavioral Engine adds penalties to the score for specific red flags like "Impossible Travel" or "Rapid Checkout".
+5. **AI Explanation:** The Gemini API converts these data points into a human-readable 2-sentence report explaining why the risk score is what it is.

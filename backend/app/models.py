@@ -108,6 +108,7 @@ class FraudAnalysisResult(BaseModel):
     is_fraud: bool
     
     # Detailed reports
+    ml_risk_score: float = 0.0
     graph_report: GraphRiskReport
     behavioral_report: BehavioralReport
     
@@ -117,3 +118,27 @@ class FraudAnalysisResult(BaseModel):
     # Metadata
     processing_time_ms: float = 0.0
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ──────────────────────────────────────────────
+# System Status & Action Models
+# ──────────────────────────────────────────────
+
+class ActionResponse(BaseModel):
+    """Result of a command action."""
+    success: bool
+    message: str
+    action_type: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    details: dict = {}
+
+
+class SystemHealthStatus(BaseModel):
+    """Detailed system health and audit status."""
+    status: str
+    uptime_seconds: float
+    integrity_score: float
+    engines: dict
+    active_nodes: int
+    version: str
+    last_audit: datetime

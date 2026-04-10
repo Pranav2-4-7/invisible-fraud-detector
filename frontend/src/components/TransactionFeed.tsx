@@ -8,142 +8,112 @@ interface TransactionFeedProps {
   loading: boolean;
 }
 
-function getRiskColor(score?: number) {
-  if (!score || score < 0.2) return { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-500" };
-  if (score < 0.4) return { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20", dot: "bg-amber-500" };
-  if (score < 0.7) return { bg: "bg-orange-500/10", text: "text-orange-400", border: "border-orange-500/20", dot: "bg-orange-500" };
-  return { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20", dot: "bg-red-500" };
-}
-
-function getStatusLabel(status?: string) {
-  switch (status) {
-    case "flagged": return "FLAGGED";
-    case "cleared": return "CLEAR";
-    case "analyzed": return "ANALYZED";
-    default: return "PENDING";
-  }
-}
-
 function formatTime(timestamp: string) {
   try {
     const d = new Date(timestamp);
-    return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}:${d.getMilliseconds().toString().padStart(3, '0')}`;
   } catch {
-    return "--:--:--";
+    return "--:--:--:---";
   }
 }
 
 export default function TransactionFeed({ transactions, loading }: TransactionFeedProps) {
   return (
-    <div className="flex h-full flex-col rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
-          </span>
-          <h2 className="text-sm font-semibold text-white">Live Transaction Feed</h2>
+    <div className="glass-card rounded-lg overflow-hidden flex flex-col h-full border border-white/10">
+      <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50">
+        <h3 className="text-sm font-black uppercase tracking-widest text-white">LIVE_LEDGER_EVIDENCE</h3>
+        <div className="flex gap-2">
+          {loading ? (
+             <div className="px-2 py-1 bg-primary/10 rounded border border-primary/20 text-[10px] font-mono text-primary animate-pulse">CONNECTING...</div>
+          ) : (
+            <>
+              <div className="px-2 py-1 bg-white/5 rounded border border-white/10 text-[10px] font-mono text-gray-400">STREAMING_ON</div>
+              <div className="px-2 py-1 bg-primary/10 rounded border border-primary/20 text-[10px] font-mono text-primary">BUFFER: 0ms</div>
+            </>
+          )}
         </div>
-        <span className="text-[11px] font-medium text-white/30">
-          {transactions.length} transactions
-        </span>
       </div>
-
-      {/* Feed */}
-      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
-        {loading ? (
-          <div className="flex h-32 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-cyan-500/30 border-t-cyan-500" />
-          </div>
-        ) : transactions.length === 0 ? (
-          <div className="flex h-32 flex-col items-center justify-center gap-2 text-white/30">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-            </svg>
-            <span className="text-xs">Waiting for transactions...</span>
-            <span className="text-[10px]">Start the simulation to see live data</span>
-          </div>
-        ) : (
-          <AnimatePresence initial={false}>
-            {transactions.map((tx, index) => {
-              const risk = getRiskColor(tx.risk_score);
-              const isFlagged = tx.status === "flagged";
-
-              return (
-                <motion.div
-                  key={tx.transaction_id}
-                  initial={{ opacity: 0, x: -20, height: 0 }}
-                  animate={{ opacity: 1, x: 0, height: "auto" }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3, delay: index === 0 ? 0 : 0 }}
-                  className={`mb-1.5 rounded-lg border p-3 transition-all ${
-                    isFlagged
-                      ? "border-red-500/30 bg-red-500/[0.05] shadow-lg shadow-red-500/5"
-                      : "border-white/[0.04] bg-white/[0.01] hover:border-white/[0.08]"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={`h-1.5 w-1.5 rounded-full ${risk.dot}`} />
-                      <span className="text-xs font-medium text-white/80">
-                        {tx.user_id}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${risk.bg} ${risk.text} ${risk.border} border`}>
-                        {getStatusLabel(tx.status)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-2 flex items-end justify-between">
-                    <div>
-                      <span className="text-lg font-bold text-white">
-                        ${tx.amount?.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </span>
-                      <span className="ml-1 text-[10px] text-white/30">{tx.currency}</span>
-                    </div>
-                    <span className="text-[10px] text-white/25">
-                      {formatTime(tx.timestamp)}
-                    </span>
-                  </div>
-
-                  {tx.risk_score !== undefined && tx.risk_score > 0 && (
-                    <div className="mt-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-white/30">Risk</span>
-                        <span className={`text-[10px] font-bold ${risk.text}`}>
-                          {(tx.risk_score * 100).toFixed(1)}%
+      
+      <div className="overflow-x-auto flex-1">
+        <table className="w-full text-left border-collapse min-w-max">
+          <thead className="sticky top-0 bg-[#06060a] bg-opacity-90 backdrop-blur-md z-10">
+            <tr className="bg-white/5 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4">User_ID</th>
+              <th className="px-6 py-4">Amount</th>
+              <th className="px-6 py-4 text-center">Risk</th>
+              <th className="px-6 py-4 text-right">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody className="text-xs font-medium text-gray-300 divide-y divide-white/5 bg-[#06060a]">
+            {transactions.length === 0 && !loading && (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-mono">
+                  WAITING_FOR_DATA_STREAM
+                </td>
+              </tr>
+            )}
+            <AnimatePresence initial={false}>
+              {transactions.map((tx) => {
+                const isFlagged = tx.status === "flagged" || (tx.risk_score && tx.risk_score >= 0.7);
+                const isWarning = tx.risk_score && tx.risk_score >= 0.4 && tx.risk_score < 0.7;
+                const isSafe = !isFlagged && !isWarning;
+                
+                let rowClass = "hover:bg-white/5 transition-colors";
+                if (isFlagged) rowClass = "critical-glow bg-red-500/5 group hover:bg-red-500/10 transition-colors";
+                
+                return (
+                  <motion.tr 
+                    key={tx.transaction_id}
+                    initial={{ opacity: 0, backgroundColor: 'rgba(255,255,255,0.2)' }}
+                    animate={{ opacity: 1, backgroundColor: 'transparent' }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className={rowClass}
+                  >
+                    <td className="px-6 py-4">
+                      {isFlagged && (
+                        <span className="flex items-center gap-2 text-red-500 font-bold">
+                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                          FLAGGED_CRITICAL
                         </span>
-                      </div>
-                      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
-                        <motion.div
-                          className={`h-full rounded-full ${risk.dot}`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(tx.risk_score * 100, 100)}%` }}
-                          transition={{ duration: 0.6, ease: "easeOut" }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {isFlagged && (
-                    <div className="mt-2 flex items-center gap-1">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-400">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                      </svg>
-                      <span className="text-[10px] font-medium text-red-400/80">
-                        Fraud Detected — See Alert Panel →
+                      )}
+                      {isWarning && (
+                         <span className="flex items-center gap-2 text-amber-500 font-bold">
+                           <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                           ANOMALY_DETECTED
+                         </span>
+                      )}
+                      {isSafe && (
+                        <span className="flex items-center gap-2 text-green-500">
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                          VERIFIED_SECURE
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 font-mono">{tx.user_id}</td>
+                    <td className="px-6 py-4 text-white">${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`${isFlagged ? 'bg-red-500 text-white' : isWarning ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/10 text-green-500'} px-2 py-0.5 rounded text-[10px] font-bold`}>
+                        {tx.risk_score ? tx.risk_score.toFixed(2) : "0.01"}
                       </span>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        )}
+                    </td>
+                    <td className="px-6 py-4 text-right font-mono text-gray-500">
+                      {formatTime(tx.timestamp)}
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
+      <div className="p-4 bg-white/[0.02] border-t border-white/5 flex justify-between items-center mt-auto">
+        <span className="text-[10px] text-gray-500">SHOWING {Math.min(transactions.length, 100)} OF {transactions.length} EVENTS</span>
+        <div className="flex gap-2">
+          <button className="px-3 py-1 bg-white/5 rounded border border-white/10 text-[10px] text-gray-400 hover:text-white transition-colors">PREV</button>
+          <button className="px-3 py-1 bg-white/10 rounded border border-white/20 text-[10px] text-white">NEXT</button>
+        </div>
       </div>
     </div>
   );

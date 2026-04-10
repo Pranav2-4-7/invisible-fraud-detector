@@ -93,6 +93,7 @@ export interface FraudAlert {
   subgraph_edges: GraphEdge[];
   
   // Metadata
+  ml_risk_score: number;
   processing_time_ms: number;
   created_at: string;
 }
@@ -108,6 +109,7 @@ export interface FraudAnalysisResult {
   graph_report: GraphRiskReport;
   behavioral_report: BehavioralReport;
   explanation: string;
+  ml_risk_score: number;
   processing_time_ms: number;
   analyzed_at: string;
 }

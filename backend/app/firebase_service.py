@@ -27,10 +27,10 @@ class FirebaseService:
         try:
             from firebase_admin import firestore
             self._db = firestore.client()
-            print("✅ Firestore client initialized")
+            print("[OK] Firestore client initialized")
         except Exception as e:
-            print(f"⚠️  Firestore initialization failed: {e}")
-            print("   Running in OFFLINE mode — data will not persist.")
+            print(f"[WARN] Firestore initialization failed: {e}")
+            print("   Running in OFFLINE mode -- data will not persist.")
             self._db = None
 
     @property

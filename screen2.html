@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fraud Command Center Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-surface": "#e2e2e2",
+                "on-secondary-fixed": "#1b1b1b",
+                "surface-tint": "#c6c6c6",
+                "tertiary-container": "#000000",
+                "secondary": "#c6c6c6",
+                "error-container": "#93000a",
+                "on-primary-fixed-variant": "#474747",
+                "on-primary-fixed": "#1b1b1b",
+                "on-secondary-fixed-variant": "#474747",
+                "tertiary-fixed-dim": "#c6c6c6",
+                "secondary-fixed-dim": "#c6c6c6",
+                "on-tertiary-fixed": "#1b1b1b",
+                "on-tertiary-container": "#757575",
+                "on-error-container": "#ffdad6",
+                "surface-container-highest": "#353535",
+                "secondary-fixed": "#e2e2e2",
+                "primary-fixed-dim": "#c6c6c6",
+                "inverse-primary": "#5e5e5e",
+                "on-tertiary": "#303030",
+                "primary-fixed": "#e2e2e2",
+                "tertiary-fixed": "#e2e2e2",
+                "surface": "#131313",
+                "on-surface-variant": "#cfc4c5",
+                "surface-variant": "#353535",
+                "primary-container": "#000000",
+                "on-secondary-container": "#b5b5b5",
+                "error": "#ffb4ab",
+                "surface-container-low": "#1b1b1b",
+                "tertiary": "#c6c6c6",
+                "background": "#131313",
+                "surface-container-lowest": "#0e0e0e",
+                "surface-container-high": "#2a2a2a",
+                "surface-dim": "#131313",
+                "inverse-surface": "#e2e2e2",
+                "outline": "#988e90",
+                "on-primary-container": "#757575",
+                "outline-variant": "#4c4546",
+                "on-error": "#690005",
+                "on-secondary": "#303030",
+                "on-tertiary-fixed-variant": "#474747",
+                "on-primary": "#303030",
+                "surface-bright": "#393939",
+                "surface-container": "#1f1f1f",
+                "primary": "#c6c6c6",
+                "on-background": "#e2e2e2",
+                "inverse-on-surface": "#303030",
+                "secondary-container": "#474747"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .bg-amoled { background-color: #000000; }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .critical-glow {
+        box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.2), 0 0 10px rgba(255, 0, 0, 0.1);
+        border-left: 4px solid #ff4d4d !important;
+      }
+    </style>
+</head>
+<body class="bg-amoled text-on-background font-body selection:bg-primary/30 min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-black/95 backdrop-blur-md text-gray-400 dark:text-gray-400 font-['Inter'] antialiased tracking-tight docked full-width top-0 border-b border-white/10 flex justify-between items-center px-6 py-3 w-full sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<span class="text-lg font-black tracking-tighter text-white dark:text-white">FRAUD_SHIELD_OS</span>
+<div class="hidden md:flex items-center gap-6 text-sm">
+<a class="text-white border-b-2 border-white pb-1 cursor-pointer active:opacity-80" href="#">Dashboard</a>
+<a class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer active:opacity-80" href="#">Live Feed</a>
+<a class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer active:opacity-80" href="#">Graph Analysis</a>
+<a class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer active:opacity-80" href="#">Settings</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-white transition-colors cursor-pointer">notifications_active</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full"></span>
+</div>
+<span class="material-symbols-outlined text-gray-400 hover:text-white transition-colors cursor-pointer">sensors</span>
+<span class="material-symbols-outlined text-gray-400 hover:text-white transition-colors cursor-pointer">account_tree</span>
+<div class="w-8 h-8 rounded-full border border-white/20 overflow-hidden ml-2">
+<img alt="Analyst Profile" class="w-full h-full object-cover" data-alt="professional cybersecurity analyst portrait in dark studio with blue ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbWXHkjtJ5BTIu8i_77Uf_xLzc7skJdX2HJWThRfv8Y2yA3XUoz6FgPUzl6ouci2sM8ihCs5jHvXtOJheH0F9n2a-B1PWr3YOP4lHPPBsfQ5BK7HcLlsEjsfNUvLMSre4VBr9LV5WzUQnb-eF9AFQUK8QY8-eIAvv2FcslDGZ1HeO8Y9H7jvmlBiW3Sj105x4b1ahBlKKeWBIC175bBqRwYKTiyCy0OKFlryvb_VJeHGnAyd0UKnswdUfXVN1Wi9CN8jR2xtLVXzQ"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col w-64 h-full p-4 gap-2 bg-black font-['Inter'] text-sm font-medium rounded-r-lg border-r border-white/10">
+<div class="mb-8 px-2">
+<h2 class="text-xl font-bold text-white">SECURE_CORE</h2>
+<p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">V3.4.2 SYSTEM_UPTIME: 99.9%</p>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="flex items-center gap-3 px-3 py-2 text-white font-bold bg-white/10 rounded-lg cursor-pointer transition-all duration-150 scale-98">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span>Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-gray-500 hover:text-white/70 hover:bg-white/5 rounded-lg cursor-pointer transition-all duration-150">
+<span class="material-symbols-outlined text-[20px]">security</span>
+<span>Live Feed</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-gray-500 hover:text-white/70 hover:bg-white/5 rounded-lg cursor-pointer transition-all duration-150">
+<span class="material-symbols-outlined text-[20px]">hub</span>
+<span>Graph Analysis</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-gray-500 hover:text-white/70 hover:bg-white/5 rounded-lg cursor-pointer transition-all duration-150">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Settings</span>
+</div>
+</nav>
+<button class="mt-auto w-full py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span>
+                EXPORT_REPORT
+            </button>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-6 bg-amoled">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+<div>
+<h1 class="text-3xl font-black text-white tracking-tight">Fraud Command Center Dashboard</h1>
+<p class="text-gray-500 font-mono text-xs mt-1">SESS_ID: FR-9928-AX // SYSTEM_READY</p>
+</div>
+<div class="flex gap-4">
+<div class="px-4 py-2 bg-surface-container rounded-lg border border-white/5 flex flex-col">
+<span class="text-[10px] text-gray-500 uppercase font-bold">Total Scanned</span>
+<span class="text-xl font-bold text-white">1,240,942</span>
+</div>
+<div class="px-4 py-2 bg-surface-container rounded-lg border border-white/5 flex flex-col">
+<span class="text-[10px] text-gray-500 uppercase font-bold">Threats Neutralized</span>
+<span class="text-xl font-bold text-primary">84.2%</span>
+</div>
+</div>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+<!-- COMMAND_INSIGHTS Card (Spans 1 col) -->
+<section class="lg:col-span-1 space-y-6">
+<div class="glass-card rounded-lg p-5">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-red-500 text-sm">emergency</span>
+<h3 class="text-xs font-black uppercase tracking-widest text-white">COMMAND_INSIGHTS</h3>
+</div>
+<div class="p-4 bg-red-950/20 border border-red-900/50 rounded-lg">
+<p class="text-sm text-red-200 leading-relaxed font-medium">
+                                Flagged: Unrecognized device sharing an IP with 3 known fraudulent nodes. High-velocity transfer at 3 AM.
+                            </p>
+<div class="mt-4 flex justify-between items-center">
+<span class="text-[10px] font-mono text-red-400">NODE: US-EAST-1</span>
+<button class="text-[10px] font-bold text-white underline underline-offset-4">INVESTIGATE</button>
+</div>
+</div>
+<div class="mt-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-xs text-gray-400">System Integrity</span>
+<span class="text-xs font-mono text-white">OPTIMAL</span>
+</div>
+<div class="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+<div class="w-full h-full bg-white/40"></div>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-lg p-5">
+<h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Global Heatmap</h3>
+<div class="w-full h-40 rounded-lg bg-surface-container-low overflow-hidden relative">
+<img alt="Threat Map" class="w-full h-full object-cover opacity-50 grayscale" data-alt="abstract digital world map with glowing data points and dark UI aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7T4BA5Anq7rrZ7neuRXKDvSOaunrN6O2ZTr5UJ8ZAgGhjmR07F65DtbKHF7gfDLcCGIeZfEquRSE5G-Jf35XHcj4N_igtxIoYweObN3kOlnIJldjzKyl1eDvYu10l-ZesV3JFRnSvLH3wey70yTWf6xpVfvh2ek1xivjfeubP-9UfEMwZVy_OUh0F6-Fry3NQRMIbiIqwbF4Ka2Wx3nHI9LpXU9xLNjVNcca3cHCcppwYpDSTQxmMMJcAnXno89_yApW3NlDvp_w"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+<div class="absolute top-1/2 left-1/3 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_#ef4444]"></div>
+<div class="absolute top-1/4 right-1/4 w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse shadow-[0_0_6px_#f87171]"></div>
+</div>
+</div>
+</section>
+<!-- LIVE_LEDGER_EVIDENCE Table (Spans 3 cols) -->
+<section class="lg:col-span-3">
+<div class="glass-card rounded-lg overflow-hidden flex flex-col h-full border border-white/10">
+<div class="p-5 border-b border-white/10 flex justify-between items-center">
+<h3 class="text-sm font-black uppercase tracking-widest text-white">LIVE_LEDGER_EVIDENCE</h3>
+<div class="flex gap-2">
+<div class="px-2 py-1 bg-white/5 rounded border border-white/10 text-[10px] font-mono text-gray-400">STREAMING_ON</div>
+<div class="px-2 py-1 bg-primary/10 rounded border border-primary/20 text-[10px] font-mono text-primary">BUFFER: 0ms</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">User_ID</th>
+<th class="px-6 py-4">Device / IP</th>
+<th class="px-6 py-4">Amount</th>
+<th class="px-6 py-4 text-center">Risk</th>
+<th class="px-6 py-4 text-right">Timestamp</th>
+</tr>
+</thead>
+<tbody class="text-xs font-medium text-gray-300 divide-y divide-white/5">
+<tr class="critical-glow bg-red-500/5 group hover:bg-red-500/10 transition-colors">
+<td class="px-6 py-4">
+<span class="flex items-center gap-2 text-red-500 font-bold">
+<span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                                FLAGGED_CRITICAL
+                                            </span>
+</td>
+<td class="px-6 py-4 font-mono">USR_8829_X</td>
+<td class="px-6 py-4">iOS 17.1 / 192.168.1.104</td>
+<td class="px-6 py-4 text-white">$4,920.00</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">0.98</span>
+</td>
+<td class="px-6 py-4 text-right font-mono text-gray-500">14:02:41:002</td>
+</tr>
+<tr class="critical-glow bg-red-500/5 group hover:bg-red-500/10 transition-colors">
+<td class="px-6 py-4">
+<span class="flex items-center gap-2 text-red-500 font-bold">
+<span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                                FLAGGED_CRITICAL
+                                            </span>
+</td>
+<td class="px-6 py-4 font-mono">USR_4410_Z</td>
+<td class="px-6 py-4">Win 11 / 45.20.118.9</td>
+<td class="px-6 py-4 text-white">$12,050.00</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">0.94</span>
+</td>
+<td class="px-6 py-4 text-right font-mono text-gray-500">14:02:38:119</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4">
+<span class="flex items-center gap-2 text-gray-500">
+<span class="w-1.5 h-1.5 bg-gray-600 rounded-full"></span>
+                                                PENDING_ANALYSIS
+                                            </span>
+</td>
+<td class="px-6 py-4 font-mono">USR_9012_A</td>
+<td class="px-6 py-4">macOS 14 / 88.192.3.44</td>
+<td class="px-6 py-4 text-white">$245.50</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-white/10 text-gray-400 px-2 py-0.5 rounded text-[10px] font-bold">0.12</span>
+</td>
+<td class="px-6 py-4 text-right font-mono text-gray-500">14:02:35:948</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4">
+<span class="flex items-center gap-2 text-green-500">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                                VERIFIED_SECURE
+                                            </span>
+</td>
+<td class="px-6 py-4 font-mono">USR_1156_Q</td>
+<td class="px-6 py-4">Android 14 / 203.0.113.5</td>
+<td class="px-6 py-4 text-white">$89.00</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-green-500/10 text-green-500 px-2 py-0.5 rounded text-[10px] font-bold">0.02</span>
+</td>
+<td class="px-6 py-4 text-right font-mono text-gray-500">14:02:30:221</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4">
+<span class="flex items-center gap-2 text-gray-500">
+<span class="w-1.5 h-1.5 bg-gray-600 rounded-full"></span>
+                                                PENDING_ANALYSIS
+                                            </span>
+</td>
+<td class="px-6 py-4 font-mono">USR_3389_M</td>
+<td class="px-6 py-4">Linux 6.1 / 104.244.42.1</td>
+<td class="px-6 py-4 text-white">$1,100.99</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-white/10 text-gray-400 px-2 py-0.5 rounded text-[10px] font-bold">0.45</span>
+</td>
+<td class="px-6 py-4 text-right font-mono text-gray-500">14:02:22:108</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4">
+<span class="flex items-center gap-2 text-green-500">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                                VERIFIED_SECURE
+                                            </span>
+</td>
+<td class="px-6 py-4 font-mono">USR_0092_B</td>
+<td class="px-6 py-4">iOS 17.2 / 216.58.212.174</td>
+<td class="px-6 py-4 text-white">$15.00</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-green-500/10 text-green-500 px-2 py-0.5 rounded text-[10px] font-bold">0.01</span>
+</td>
+<td class="px-6 py-4 text-right font-mono text-gray-500">14:02:18:774</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-auto p-4 bg-white/[0.02] border-t border-white/5 flex justify-between items-center">
+<span class="text-[10px] text-gray-500">SHOWING 6 OF 1,429 EVENTS</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-white/5 rounded border border-white/10 text-[10px] text-gray-400 hover:text-white transition-colors">PREV</button>
+<button class="px-3 py-1 bg-white/10 rounded border border-white/20 text-[10px] text-white">NEXT</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Asymmetric Bottom Section -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+<div class="md:col-span-2 glass-card rounded-lg p-5">
+<h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-6">Neural Network Topology</h3>
+<div class="flex items-center justify-center py-12">
+<div class="relative w-full max-w-md h-40">
+<!-- SVG Placeholder for Graph -->
+<svg class="w-full h-full text-white/10" viewbox="0 0 400 160">
+<circle cx="50" cy="80" fill="currentColor" r="4"></circle>
+<circle cx="150" cy="40" fill="currentColor" r="4"></circle>
+<circle cx="150" cy="120" fill="currentColor" r="4"></circle>
+<circle class="animate-pulse" cx="250" cy="80" fill="white" r="4"></circle>
+<circle cx="350" cy="80" fill="currentColor" r="4"></circle>
+<path d="M50 80 L150 40 M50 80 L150 120 M150 40 L250 80 M150 120 L250 80 M250 80 L350 80" fill="none" stroke="currentColor" stroke-width="1"></path>
+<path d="M150 40 L150 120" opacity="0.5" stroke="red" stroke-dasharray="4" stroke-width="0.5"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-[10px] font-mono text-gray-400 bg-black/80 px-2 py-1 border border-white/10">REAL-TIME_RECONSTRUCTING...</span>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-lg p-5 flex flex-col justify-between">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Quick Actions</h3>
+<div class="space-y-2">
+<button class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-between group transition-all">
+<span class="text-xs font-bold text-gray-300 group-hover:text-white">SHUTDOWN_NODE_4</span>
+<span class="material-symbols-outlined text-sm text-gray-500">arrow_forward</span>
+</button>
+<button class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-between group transition-all">
+<span class="text-xs font-bold text-gray-300 group-hover:text-white">ROTATE_API_KEYS</span>
+<span class="material-symbols-outlined text-sm text-gray-500">arrow_forward</span>
+</button>
+<button class="w-full text-left px-4 py-3 border border-red-900/50 bg-red-950/10 hover:bg-red-900/20 rounded-lg flex items-center justify-between group transition-all">
+<span class="text-xs font-bold text-red-500">EMERGENCY_LOCKOUT</span>
+<span class="material-symbols-outlined text-sm text-red-500">priority_high</span>
+</button>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-white/5 flex items-center gap-3">
+<div class="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+<span class="text-[10px] font-mono text-gray-500 tracking-tighter">LATENCY: 4MS // PORT: 8080 // SSL: ACTIVE</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

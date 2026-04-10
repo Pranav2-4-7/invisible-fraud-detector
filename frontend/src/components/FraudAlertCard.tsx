@@ -100,6 +100,25 @@ function AlertItem({ alert }: { alert: FraudAlert }) {
                 </div>
               </div>
 
+              <div>
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">ML Inference (XGBoost)</h4>
+                <div className="rounded-lg bg-white/[0.03] p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-white/40">Fraud Probability</span>
+                    <span className={`text-xs font-mono font-bold ${(alert.ml_risk_score || 0) > 0.7 ? 'text-red-400' : (alert.ml_risk_score || 0) > 0.4 ? 'text-orange-400' : 'text-emerald-400'}`}>
+                      {((alert.ml_risk_score || 0) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(alert.ml_risk_score || 0) * 100}%` }}
+                      className={`h-full ${(alert.ml_risk_score || 0) > 0.7 ? 'bg-red-500' : (alert.ml_risk_score || 0) > 0.4 ? 'bg-orange-500' : 'bg-emerald-500'}`}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {alert.flagged_connections?.length > 0 && (
                 <div>
                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">Flagged Connections</h4>
