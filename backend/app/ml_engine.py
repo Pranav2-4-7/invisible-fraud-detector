@@ -92,6 +92,11 @@ class FraudMLModel:
         if self.model is not None:
              # Real XGBoost Path
              features = FeatureTransformer.transform(tx)
+             
+             # Log the model matrix (feature vector) for visibility
+             print(f"   [ML MATRIX] Transaction {tx.transaction_id} feature vector (1x30):")
+             print(f"   {features}")
+
              # predict_proba returns [[prob_class_0, prob_class_1]]
              prob_fraud = self.model.predict_proba(features)[0][1]
              return float(prob_fraud)
