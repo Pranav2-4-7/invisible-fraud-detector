@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import type { FraudAlert } from "@/lib/types";
 import RiskGauge from "./RiskGauge";
+import RiskBreakdown from "./RiskBreakdown";
 
 interface FraudAlertCardProps {
   alerts: FraudAlert[];
@@ -101,23 +102,44 @@ function AlertItem({ alert }: { alert: FraudAlert }) {
               </div>
 
               <div>
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">ML Inference (XGBoost)</h4>
-                <div className="rounded-lg bg-white/[0.03] p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-white/40">Fraud Probability</span>
-                    <span className={`text-xs font-mono font-bold ${(alert.ml_risk_score || 0) > 0.7 ? 'text-red-400' : (alert.ml_risk_score || 0) > 0.4 ? 'text-orange-400' : 'text-emerald-400'}`}>
-                      {((alert.ml_risk_score || 0) * 100).toFixed(1)}%
+                <RiskBreakdown
+                  factors={alert.risk_factors || []}
+                  compositeScore={alert.risk_score}
+                />
+              </div>
+
+              {/* Geo-location */}
+              {alert.geo_origin && (
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">Geo-Location Intel</h4>
+                  <div className="rounded-lg bg-white/[0.03] p-3 flex items-center gap-3">
+                    {alert.geo_previous && (
+                      <>
+                        <span className="text-[11px] font-mono text-gray-400">
+                          {alert.geo_previous.city}
+                        </span>
+                        <span className="text-[10px] text-red-400">→</span>
+                      </>
+                    )}
+                    <span className={`text-[11px] font-mono font-bold ${alert.is_fraud ? 'text-red-400' : 'text-emerald-400'}`}>
+                      {alert.geo_origin.city}
+                    </span>
+                    <span className="text-[9px] text-gray-600 ml-auto">
+                      ({alert.geo_origin.lat.toFixed(2)}, {alert.geo_origin.lon.toFixed(2)})
                     </span>
                   </div>
-                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(alert.ml_risk_score || 0) * 100}%` }}
-                      className={`h-full ${(alert.ml_risk_score || 0) > 0.7 ? 'bg-red-500' : (alert.ml_risk_score || 0) > 0.4 ? 'bg-orange-500' : 'bg-emerald-500'}`}
-                    />
-                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Scenario Tag */}
+              {alert.scenario_tag && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-mono text-gray-500">SCENARIO:</span>
+                  <span className="text-[9px] font-mono font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                    {alert.scenario_tag.toUpperCase().replace("_", " ")}
+                  </span>
+                </div>
+              )}
 
               {alert.flagged_connections?.length > 0 && (
                 <div>

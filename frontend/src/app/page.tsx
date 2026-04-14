@@ -7,12 +7,15 @@ import StatsBar from "@/components/StatsBar";
 import TransactionFeed from "@/components/TransactionFeed";
 import CommandInsights from "@/components/CommandInsights";
 import GraphView from "@/components/GraphView";
+import ThreatMap from "@/components/ThreatMap";
+import ScenarioPanel from "@/components/ScenarioPanel";
 import type {
   Transaction,
   FraudAlert,
   FraudAnalysisResult,
   GraphNode,
   GraphEdge,
+  GeoPoint,
 } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -23,6 +26,16 @@ interface Toast {
   message: string;
   type: "success" | "error" | "info";
   exiting?: boolean;
+}
+
+// ── ThreatMap event type ──
+interface ThreatEvent {
+  id: string;
+  origin: GeoPoint;
+  previous?: GeoPoint;
+  riskScore: number;
+  isFraud: boolean;
+  timestamp: number;
 }
 
 export default function Dashboard() {
@@ -40,6 +53,9 @@ export default function Dashboard() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [laserKey, setLaserKey] = useState(0);
   const toastIdRef = useRef(0);
+
+  // Geo-threat events
+  const [threatEvents, setThreatEvents] = useState<ThreatEvent[]>([]);
 
   // Live telemetry
   const [latency, setLatency] = useState<number | null>(null);
@@ -139,9 +155,26 @@ export default function Dashboard() {
         subgraph_edges: result.graph_report.subgraph_edges,
         processing_time_ms: result.processing_time_ms,
         ml_risk_score: result.ml_risk_score,
+        risk_factors: result.risk_factors || [],
+        geo_origin: result.geo_origin,
+        geo_previous: result.geo_previous,
+        scenario_tag: result.scenario_tag,
         created_at: result.analyzed_at,
       };
       setAlerts((prev) => [alert, ...prev].slice(0, 50));
+    }
+
+    // Create ThreatMap event if geo data available
+    if (result.geo_origin) {
+      const threatEvent: ThreatEvent = {
+        id: result.transaction_id,
+        origin: result.geo_origin,
+        previous: result.geo_previous || undefined,
+        riskScore: result.risk_score,
+        isFraud: result.is_fraud,
+        timestamp: Date.now(),
+      };
+      setThreatEvents((prev) => [...prev, threatEvent].slice(-100));
     }
 
     if (result.graph_report?.subgraph_nodes?.length > 0) {
@@ -251,6 +284,16 @@ export default function Dashboard() {
   const fraudRate =
     totalTransactions > 0 ? flaggedCount / totalTransactions : 0;
 
+  // ── Process scenario results ──
+  const handleScenarioResults = useCallback(
+    (results: unknown[]) => {
+      for (const r of results) {
+        processResult(r as FraudAnalysisResult);
+      }
+    },
+    [processResult]
+  );
+
   return (
     <div className="w-full relative">
       <Header
@@ -288,6 +331,21 @@ export default function Dashboard() {
           <section className="lg:col-span-3">
             <TransactionFeed transactions={transactions} loading={loading} />
           </section>
+        </motion.div>
+
+        {/* Threat Map + Scenario Panel */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
+        >
+          <div className="md:col-span-2 min-h-[300px]">
+            <ThreatMap events={threatEvents} />
+          </div>
+          <div>
+            <ScenarioPanel onScenarioResults={handleScenarioResults} />
+          </div>
         </motion.div>
 
         <motion.div

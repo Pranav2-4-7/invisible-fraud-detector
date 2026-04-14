@@ -26,13 +26,16 @@ from app.models import (
     RiskLevel,
     ActionResponse,
     SystemHealthStatus,
+    RiskFactor,
+    GeoPoint,
 )
 from app.graph_engine import FraudGraph
 from app.behavioral_engine import BehavioralAnalyzer
 from app.explainability import ExplainabilityEngine
 from app.ml_engine import FraudMLModel
 from app.firebase_service import FirebaseService
-from app.simulator import generate_transaction, run_simulation
+from app.simulator import generate_transaction, run_simulation, generate_scenario_burst
+from app.behavioral_engine import IP_GEO_MAP
 
 
 # ──────────────────────────────────────────────
@@ -182,6 +185,48 @@ async def analyze_transaction(tx: TransactionInput) -> FraudAnalysisResult:
 
     processing_time = (time.time() - start_time) * 1000  # ms
 
+    # Step 5: Build XAI risk factor breakdown
+    risk_factors = [
+        RiskFactor(
+            name="ml_model",
+            weight=ml_weight,
+            score=round(ml_risk_score, 4),
+            label="XGBoost ML Model",
+            color="#00D4FF",
+        ),
+        RiskFactor(
+            name="graph_analysis",
+            weight=graph_weight,
+            score=round(graph_report.graph_risk_score, 4),
+            label="Graph Network Analysis",
+            color="#A855F7",
+        ),
+        RiskFactor(
+            name="behavioral",
+            weight=behavioral_weight,
+            score=round(behavioral_report.behavioral_risk_score, 4),
+            label="Behavioral Engine",
+            color="#FFB800",
+        ),
+    ]
+
+    # Step 6: Geo-location enrichment
+    geo_origin = None
+    geo_previous = None
+    current_geo = IP_GEO_MAP.get(tx.ip_address)
+    if current_geo:
+        city, lat, lon = current_geo
+        geo_origin = GeoPoint(city=city, lat=lat, lon=lon)
+
+    # Check for previous location from behavioral history
+    history = behavioral_engine._user_history.get(tx.user_id, [])
+    if len(history) >= 2:  # >= 2 because current tx was just appended
+        prev_ip = history[-2][1]
+        prev_geo = IP_GEO_MAP.get(prev_ip)
+        if prev_geo:
+            pcity, plat, plon = prev_geo
+            geo_previous = GeoPoint(city=pcity, lat=plat, lon=plon)
+
     # Build result
     result = FraudAnalysisResult(
         transaction_id=tx.transaction_id,
@@ -194,6 +239,9 @@ async def analyze_transaction(tx: TransactionInput) -> FraudAnalysisResult:
         ml_risk_score=round(ml_risk_score, 4),
         graph_report=graph_report,
         behavioral_report=behavioral_report,
+        risk_factors=risk_factors,
+        geo_origin=geo_origin,
+        geo_previous=geo_previous,
         explanation=explanation,
         processing_time_ms=round(processing_time, 2),
     )
@@ -371,3 +419,87 @@ async def simulate_single():
     tx = generate_transaction(fraud_probability=0.30)
     result = await analyze_transaction(tx)
     return result
+
+
+# ──────────────────────────────────────────────
+# Attack Scenario Endpoints
+# ──────────────────────────────────────────────
+
+@app.post("/simulate/scenario/{scenario_name}")
+async def run_scenario(scenario_name: str):
+    """
+    Run a named fraud attack scenario.
+    Supported scenarios: botnet_strike, impossible_travel, money_laundering,
+    identity_theft, rapid_cashout
+    """
+    valid_scenarios = [
+        "botnet_strike", "impossible_travel", "money_laundering",
+        "identity_theft", "rapid_cashout",
+    ]
+    if scenario_name not in valid_scenarios:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown scenario: {scenario_name}. Valid: {valid_scenarios}"
+        )
+
+    transactions = generate_scenario_burst(scenario_name)
+    results = []
+    for tx in transactions:
+        result = await analyze_transaction(tx)
+        result.scenario_tag = scenario_name
+        results.append(result)
+
+    return {
+        "scenario": scenario_name,
+        "transactions_generated": len(results),
+        "results": results,
+    }
+
+
+@app.get("/scenarios")
+async def list_scenarios():
+    """List all available attack scenarios with descriptions."""
+    return {
+        "scenarios": [
+            {
+                "id": "botnet_strike",
+                "name": "Botnet Strike",
+                "description": "Coordinated attack using shared device fingerprints and Tor exit nodes.",
+                "icon": "🤖",
+                "severity": "CRITICAL",
+                "tx_count": 5,
+            },
+            {
+                "id": "impossible_travel",
+                "name": "Impossible Travel",
+                "description": "Same user transacts from New York and Moscow within 3 minutes.",
+                "icon": "✈️",
+                "severity": "CRITICAL",
+                "tx_count": 3,
+            },
+            {
+                "id": "money_laundering",
+                "name": "Money Laundering",
+                "description": "Structured deposits just under reporting thresholds via crypto exchanges.",
+                "icon": "💰",
+                "severity": "HIGH",
+                "tx_count": 4,
+            },
+            {
+                "id": "identity_theft",
+                "name": "Identity Theft",
+                "description": "Stolen credentials used from new devices and unusual locations.",
+                "icon": "🎭",
+                "severity": "HIGH",
+                "tx_count": 3,
+            },
+            {
+                "id": "rapid_cashout",
+                "name": "Rapid Cash-Out",
+                "description": "High-velocity transactions draining an account in seconds.",
+                "icon": "⚡",
+                "severity": "CRITICAL",
+                "tx_count": 6,
+            },
+        ]
+    }

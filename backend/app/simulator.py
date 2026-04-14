@@ -183,3 +183,172 @@ async def run_simulation(
         await asyncio.sleep(interval_seconds)
 
     print(f"\n✅ Simulation complete. Generated {count} transactions.")
+
+
+# ──────────────────────────────────────────────
+# Named Attack Scenarios
+# ──────────────────────────────────────────────
+
+def generate_scenario_burst(scenario_name: str) -> list[TransactionInput]:
+    """
+    Generate a burst of transactions for a specific named attack scenario.
+    Returns a list of TransactionInput objects that tell a cohesive fraud story.
+    """
+    now = datetime.utcnow()
+
+    if scenario_name == "botnet_strike":
+        # Coordinated attack: multiple 'users' sharing the same device/IP
+        return [
+            TransactionInput(
+                user_id="user_bot_alpha",
+                amount=round(random.uniform(800, 3000), 2),
+                ip_address="185.220.101.45",  # Tor exit node
+                device_id="dev_abc123",        # Known flagged device
+                timestamp=now,
+                merchant="CryptoExchange_X",
+            ),
+            TransactionInput(
+                user_id="user_bot_beta",
+                amount=round(random.uniform(1200, 5000), 2),
+                ip_address="185.220.101.45",  # Same Tor node
+                device_id="dev_abc123",        # Same device!
+                timestamp=now + timedelta(seconds=3),
+                merchant="OffshoreBet_777",
+            ),
+            TransactionInput(
+                user_id="user_bot_gamma",
+                amount=round(random.uniform(500, 2000), 2),
+                ip_address="91.219.237.22",   # Proxy service
+                device_id="dev_abc123",        # Same device again
+                timestamp=now + timedelta(seconds=7),
+                merchant="AnonymousGift_Co",
+            ),
+            TransactionInput(
+                user_id="user_bot_delta",
+                amount=round(random.uniform(2000, 8000), 2),
+                ip_address="23.129.64.100",   # VPN endpoint
+                device_id="dev_xyz789",        # Another flagged device
+                timestamp=now + timedelta(seconds=12),
+                merchant="CryptoExchange_X",
+            ),
+            TransactionInput(
+                user_id="user_bot_alpha",  # Alpha returns
+                amount=round(random.uniform(4000, 9999), 2),
+                ip_address="175.45.176.1",    # Suspicious origin
+                device_id="dev_xyz789",
+                timestamp=now + timedelta(seconds=18),
+                merchant="OffshoreBet_777",
+            ),
+        ]
+
+    elif scenario_name == "impossible_travel":
+        # Same user transacts from NYC, then Moscow, then Mumbai in minutes
+        return [
+            TransactionInput(
+                user_id="user_42",
+                amount=125.00,
+                ip_address="192.168.1.1",    # New York
+                device_id="dev_iphone14_a",
+                timestamp=now - timedelta(minutes=5),
+                merchant="Starbucks",
+            ),
+            TransactionInput(
+                user_id="user_42",
+                amount=6500.00,
+                ip_address="185.220.101.45",  # Moscow
+                device_id="dev_spoofed_01",
+                timestamp=now - timedelta(minutes=2),
+                merchant="CryptoExchange_X",
+            ),
+            TransactionInput(
+                user_id="user_42",
+                amount=3200.00,
+                ip_address="103.21.244.10",   # Mumbai
+                device_id="dev_spoofed_01",
+                timestamp=now,
+                merchant="OffshoreBet_777",
+            ),
+        ]
+
+    elif scenario_name == "money_laundering":
+        # Structured deposits slightly under $10,000 reporting threshold
+        return [
+            TransactionInput(
+                user_id="user_launder_01",
+                amount=9850.00,
+                ip_address="23.129.64.100",
+                device_id="dev_thinkpad_f",
+                timestamp=now - timedelta(minutes=10),
+                merchant="CryptoExchange_X",
+            ),
+            TransactionInput(
+                user_id="user_launder_01",
+                amount=9720.00,
+                ip_address="23.129.64.100",
+                device_id="dev_thinkpad_f",
+                timestamp=now - timedelta(minutes=5),
+                merchant="CryptoExchange_X",
+            ),
+            TransactionInput(
+                user_id="user_launder_02",
+                amount=9900.00,
+                ip_address="91.219.237.22",
+                device_id="dev_thinkpad_f",  # Same device, different "user"
+                timestamp=now - timedelta(minutes=2),
+                merchant="AnonymousGift_Co",
+            ),
+            TransactionInput(
+                user_id="user_launder_03",
+                amount=9650.00,
+                ip_address="175.45.176.1",
+                device_id="dev_thinkpad_f",
+                timestamp=now,
+                merchant="CryptoExchange_X",
+            ),
+        ]
+
+    elif scenario_name == "identity_theft":
+        # A legitimate user's account is suddenly used from new devices/locations
+        return [
+            TransactionInput(
+                user_id="user_alice",
+                amount=4500.00,
+                ip_address="185.220.101.45",   # Moscow (Alice is usually in NYC)
+                device_id="dev_spoofed_01",     # New device
+                timestamp=now - timedelta(minutes=3),
+                merchant="Apple Store",
+            ),
+            TransactionInput(
+                user_id="user_alice",
+                amount=7800.00,
+                ip_address="91.219.237.22",    # Kyiv
+                device_id="dev_spoofed_01",
+                timestamp=now - timedelta(minutes=1),
+                merchant="CryptoExchange_X",
+            ),
+            TransactionInput(
+                user_id="user_alice",
+                amount=2200.00,
+                ip_address="175.45.176.1",     # Pyongyang
+                device_id="dev_xyz789",         # Flagged device
+                timestamp=now,
+                merchant="AnonymousGift_Co",
+            ),
+        ]
+
+    elif scenario_name == "rapid_cashout":
+        # High-velocity drain of an account
+        user = "user_cashout_victim"
+        return [
+            TransactionInput(
+                user_id=user,
+                amount=round(random.uniform(1500, 3000), 2),
+                ip_address="23.129.64.100",
+                device_id="dev_abc123",
+                timestamp=now + timedelta(seconds=i * 2),
+                merchant=random.choice(["CryptoExchange_X", "OffshoreBet_777", "AnonymousGift_Co"]),
+            )
+            for i in range(6)
+        ]
+
+    return []

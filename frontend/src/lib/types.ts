@@ -51,6 +51,33 @@ export interface BehavioralReport {
   is_anomalous: boolean;
 }
 
+// ── XAI Risk Factor ──
+export interface RiskFactor {
+  name: string;
+  weight: number;
+  score: number;
+  label: string;
+  color: string;
+}
+
+// ── Geo-Location ──
+export interface GeoPoint {
+  city: string;
+  lat: number;
+  lon: number;
+  country?: string;
+}
+
+// ── Attack Scenario ──
+export interface Scenario {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  severity: string;
+  tx_count: number;
+}
+
 export interface Transaction {
   transaction_id: string;
   user_id: string;
@@ -92,10 +119,18 @@ export interface FraudAlert {
   subgraph_nodes: GraphNode[];
   subgraph_edges: GraphEdge[];
   
+  // XAI breakdown
+  risk_factors: RiskFactor[];
+
+  // Geo-location
+  geo_origin?: GeoPoint;
+  geo_previous?: GeoPoint;
+
   // Metadata
   ml_risk_score: number;
   processing_time_ms: number;
   created_at: string;
+  scenario_tag?: string;
 }
 
 export interface FraudAnalysisResult {
@@ -110,6 +145,10 @@ export interface FraudAnalysisResult {
   behavioral_report: BehavioralReport;
   explanation: string;
   ml_risk_score: number;
+  risk_factors: RiskFactor[];
+  geo_origin?: GeoPoint;
+  geo_previous?: GeoPoint;
   processing_time_ms: number;
   analyzed_at: string;
+  scenario_tag?: string;
 }

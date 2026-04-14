@@ -92,6 +92,31 @@ class BehavioralReport(BaseModel):
 
 
 # ──────────────────────────────────────────────
+# Risk Factor (XAI Breakdown)
+# ──────────────────────────────────────────────
+
+class RiskFactor(BaseModel):
+    """Individual risk factor for XAI breakdown."""
+    name: str
+    weight: float          # 0.0 - 1.0 contribution to final score
+    score: float           # 0.0 - 1.0 raw score for this factor
+    label: str = ""        # Human-readable label
+    color: str = ""        # CSS color hint for frontend
+
+
+# ──────────────────────────────────────────────
+# Geo-Location Data
+# ──────────────────────────────────────────────
+
+class GeoPoint(BaseModel):
+    """Geographic location for threat map visualization."""
+    city: str = "Unknown"
+    lat: float = 0.0
+    lon: float = 0.0
+    country: str = ""
+
+
+# ──────────────────────────────────────────────
 # Final Composite Result
 # ──────────────────────────────────────────────
 
@@ -112,8 +137,18 @@ class FraudAnalysisResult(BaseModel):
     graph_report: GraphRiskReport
     behavioral_report: BehavioralReport
     
+    # XAI risk breakdown
+    risk_factors: list[RiskFactor] = []
+    
+    # Geo-location
+    geo_origin: Optional[GeoPoint] = None
+    geo_previous: Optional[GeoPoint] = None
+    
     # Gemini explanation
     explanation: str = ""
+    
+    # Scenario metadata
+    scenario_tag: str = ""
     
     # Metadata
     processing_time_ms: float = 0.0
