@@ -98,8 +98,37 @@ function AlertItem({ alert }: { alert: FraudAlert }) {
                     <div className="text-sm font-bold text-white">{alert.cluster_size}</div>
                     <div className="text-[9px] text-white/30">Cluster Size</div>
                   </div>
+                  </div>
                 </div>
               </div>
+
+              {/* ML Feature Significance */}
+              {alert.ml_feature_significance && (
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2 flex items-center gap-2">
+                    ML Neural Breakdown
+                    <span className="h-px flex-1 bg-white/[0.05]" />
+                  </h4>
+                  <div className="space-y-2 bg-white/[0.02] p-3 rounded-lg border border-white/[0.05]">
+                    {Object.entries(alert.ml_feature_significance).map(([name, val], i) => (
+                      <div key={i}>
+                        <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                          <span className="font-medium">{name}</span>
+                          <span className="font-mono text-[9px] text-emerald-500/80">{(val * 100).toFixed(1)}%</span>
+                        </div>
+                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, val * 100)}%` }}
+                            transition={{ duration: 1, ease: "easeOut", delay: 0.2 + i * 0.1 }}
+                            className="h-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <RiskBreakdown

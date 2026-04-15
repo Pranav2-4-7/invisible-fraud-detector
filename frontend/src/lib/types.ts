@@ -128,6 +128,7 @@ export interface FraudAlert {
 
   // Metadata
   ml_risk_score: number;
+  ml_feature_significance?: Record<string, number>;
   processing_time_ms: number;
   created_at: string;
   scenario_tag?: string;
@@ -145,6 +146,7 @@ export interface FraudAnalysisResult {
   behavioral_report: BehavioralReport;
   explanation: string;
   ml_risk_score: number;
+  ml_feature_significance?: Record<string, number>;
   risk_factors: RiskFactor[];
   geo_origin?: GeoPoint;
   geo_previous?: GeoPoint;

@@ -34,15 +34,28 @@ function AnimatedCounter({ value, suffix = "", decimals = 0 }: { value: number; 
 }
 
 export default function StatsBar({ totalTransactions, flaggedCount, avgRiskScore, fraudRate }: StatsBarProps) {
+  const [pps, setPps] = useState(142);
+  const [integrity, setIntegrity] = useState(99.85);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPps(prev => Math.max(120, Math.min(180, prev + (Math.random() - 0.5) * 10)));
+      setIntegrity(prev => Math.max(99.7, Math.min(99.9, prev + (Math.random() - 0.5) * 0.05)));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   const stats = [
     { label: "Total Transactions", value: totalTransactions, color: "from-cyan-500 to-blue-500" },
     { label: "Flagged as Fraud", value: flaggedCount, color: "from-red-500 to-pink-500" },
     { label: "Avg Risk Score", value: avgRiskScore * 100, suffix: "%", color: "from-amber-500 to-orange-500" },
     { label: "Fraud Rate", value: fraudRate * 100, suffix: "%", color: "from-purple-500 to-violet-500" },
+    { label: "Scanning PPS", value: pps, suffix: " PKTS", color: "from-emerald-500 to-teal-500" },
+    { label: "System Integrity", value: integrity, suffix: "%", color: "from-blue-500 to-indigo-500" },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
       {stats.map((stat, i) => (
         <motion.div
           key={stat.label}

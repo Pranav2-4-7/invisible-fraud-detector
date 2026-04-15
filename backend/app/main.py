@@ -15,7 +15,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -130,7 +130,7 @@ async def analyze_transaction(tx: TransactionInput) -> FraudAnalysisResult:
     start_time = time.time()
 
     # Step 1: ML analysis
-    ml_risk_score = ml_engine.predict(tx)
+    ml_risk_score, ml_significance = ml_engine.predict(tx)
 
     # Step 1: Graph analysis
     graph_report = graph_engine.analyze_transaction(
@@ -242,6 +242,7 @@ async def analyze_transaction(tx: TransactionInput) -> FraudAnalysisResult:
         risk_factors=risk_factors,
         geo_origin=geo_origin,
         geo_previous=geo_previous,
+        ml_feature_significance=ml_significance,
         explanation=explanation,
         processing_time_ms=round(processing_time, 2),
     )
@@ -422,6 +423,90 @@ async def simulate_single():
 
 
 # ──────────────────────────────────────────────
+# Live Demo — Impossible Travel Detection
+# ──────────────────────────────────────────────
+
+# In-memory session store: { user_id: { "ip": str, "timestamp": float } }
+_demo_session_store: dict[str, dict] = {}
+
+IMPOSSIBLE_TRAVEL_WINDOW_SECONDS = 300  # 5 minutes
+
+
+class DemoTransactionInput(BaseModel):
+    user_id: str = "demo_user"
+    amount: float = 500.0
+
+
+@app.post("/demo/analyze")
+async def demo_analyze(payload: DemoTransactionInput, request: Request):
+    """
+    Live-demo endpoint for Impossible Travel detection.
+
+    Extracts the real client IP (respects X-Forwarded-For for Ngrok tunnels).
+    If the same user_id hits from a *different* IP within 5 minutes, the
+    transaction is BLOCKED with an Impossible Travel alert.
+    """
+    # ── IP extraction ──
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        # X-Forwarded-For can be a comma-separated list; take the first (client) IP
+        client_ip = forwarded_for.split(",")[0].strip()
+    else:
+        client_ip = request.client.host if request.client else "unknown"
+
+    now = time.time()
+    user_id = payload.user_id
+    session = _demo_session_store.get(user_id)
+
+    if session:
+        last_ip = session["ip"]
+        last_ts = session["timestamp"]
+        time_delta = now - last_ts
+
+        if last_ip != client_ip and time_delta < IMPOSSIBLE_TRAVEL_WINDOW_SECONDS:
+            # ── BLOCKED: Impossible Travel ──
+            print(
+                f"   [DEMO BLOCKED] {user_id} | IP changed {last_ip} → {client_ip} "
+                f"in {time_delta:.0f}s"
+            )
+            return {
+                "status": "BLOCKED",
+                "reason": "Impossible Travel",
+                "message": (
+                    "CRITICAL: Session hijacked. User IP shifted abruptly. "
+                    "Auto-blocking transaction."
+                ),
+                "details": {
+                    "previous_ip": last_ip,
+                    "current_ip": client_ip,
+                    "time_delta_seconds": round(time_delta, 1),
+                    "user_id": user_id,
+                    "amount": payload.amount,
+                },
+            }
+
+    # ── APPROVED: update session store ──
+    _demo_session_store[user_id] = {"ip": client_ip, "timestamp": now}
+    print(f"   [DEMO APPROVED] {user_id} | IP: {client_ip} | ${payload.amount:.2f}")
+    return {
+        "status": "APPROVED",
+        "message": f"Transaction of ${payload.amount:.2f} approved.",
+        "details": {
+            "current_ip": client_ip,
+            "user_id": user_id,
+            "amount": payload.amount,
+        },
+    }
+
+
+@app.post("/demo/reset")
+async def demo_reset():
+    """Clear the demo session store (useful between presentations)."""
+    _demo_session_store.clear()
+    return {"status": "ok", "message": "Demo session store cleared."}
+
+
+# ──────────────────────────────────────────────
 # Attack Scenario Endpoints
 # ──────────────────────────────────────────────
 
@@ -434,7 +519,7 @@ async def run_scenario(scenario_name: str):
     """
     valid_scenarios = [
         "botnet_strike", "impossible_travel", "money_laundering",
-        "identity_theft", "rapid_cashout",
+        "identity_theft", "rapid_cashout", "financial_anvil",
     ]
     if scenario_name not in valid_scenarios:
         raise HTTPException(
@@ -500,6 +585,14 @@ async def list_scenarios():
                 "icon": "⚡",
                 "severity": "CRITICAL",
                 "tx_count": 6,
+            },
+            {
+                "id": "financial_anvil",
+                "name": "Financial Anvil",
+                "description": "High-value audit flow stress test with stealth fraud. Monitors system throughput.",
+                "icon": "⚒️",
+                "severity": "HIGH",
+                "tx_count": 13,
             },
         ]
     }

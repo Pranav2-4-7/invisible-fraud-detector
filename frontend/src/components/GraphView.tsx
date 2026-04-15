@@ -7,6 +7,7 @@ import type { GraphNode, GraphEdge } from "@/lib/types";
 interface GraphViewProps {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  onNodeClick?: (nodeId: string) => void;
 }
 
 interface RenderedNode {
@@ -142,10 +143,34 @@ const ICON_DRAWERS: Record<
   transaction: drawTransactionIcon,
 };
 
-export default function GraphView({ nodes, edges }: GraphViewProps) {
+export default function GraphView({ nodes, edges, onNodeClick }: GraphViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const renderedNodes = useRef<RenderedNode[]>([]);
+
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current || !onNodeClick) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Scale coordinates if canvas is resized
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+    const clickX = x * scaleX;
+    const clickY = y * scaleY;
+
+    // Find closest node
+    for (const node of renderedNodes.current) {
+      const dx = clickX - node.x;
+      const dy = clickY - node.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 25) { // Click radius
+        onNodeClick(node.id);
+        return;
+      }
+    }
+  }, [onNodeClick]);
 
   const initializeNodes = useCallback(() => {
     if (!canvasRef.current) return;
@@ -357,7 +382,11 @@ export default function GraphView({ nodes, edges }: GraphViewProps) {
             </span>
           </div>
         )}
-        <canvas ref={canvasRef} className="h-full w-full" />
+        <canvas 
+          ref={canvasRef} 
+          onClick={handleCanvasClick}
+          className="h-full w-full cursor-pointer" 
+        />
       </div>
     </motion.div>
   );

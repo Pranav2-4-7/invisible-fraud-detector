@@ -351,4 +351,27 @@ def generate_scenario_burst(scenario_name: str) -> list[TransactionInput]:
             for i in range(6)
         ]
 
+    elif scenario_name == "financial_anvil":
+        # High-volume high-value legitimate burst + 1 stealth fraud
+        return [
+            TransactionInput(
+                user_id=f"VIP_USER_{i}",
+                amount=round(random.uniform(10000, 50000), 2),
+                ip_address=f"192.168.1.{i+10}",
+                device_id=f"dev_macbook_{i}",
+                timestamp=now + timedelta(seconds=i * 0.2),
+                merchant="GlobalInvestmentBank",
+            )
+            for i in range(12)
+        ] + [
+            TransactionInput(
+                user_id="VIP_USER_7",  # Injected fraud
+                amount=49500.00,
+                ip_address="175.45.176.1",
+                device_id="dev_spoofed_anvil",
+                timestamp=now + timedelta(seconds=2.5),
+                merchant="OffshoreBet_777",
+            )
+        ]
+
     return []

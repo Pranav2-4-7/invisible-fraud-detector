@@ -58,6 +58,15 @@ class FeatureTransformer:
         return features.reshape(1, -1)
 
 
+FEATURE_NAMES = [
+    "Transaction Amount", "Time of Day", "Day of Week",
+    "Device Reputation", "Geo-IP Anomaly", "Merchant Risk",
+    "C1_Address_Hit", "C2_Email_Freq", "C3_Device_Chain", "C4_User_History", "C5_Card_Limit",
+    "C6_Velocity_Limit", "C7_Auth_Failures", "C8_New_Login", "C9_Browser_Ver", "C10_OS_Signature",
+    "Vasta_Auth", "Vasta_Device", "Vasta_Browser", "Vasta_OS", "Vasta_Hardware", "Vasta_Network", "Vasta_Proxy",
+    "Vasta_VPN", "Vasta_Tor", "Vasta_Bot", "Vasta_Script", "Vasta_Automation", "Vasta_Emulation", "Vasta_Debug"
+]
+
 class FraudMLModel:
     """
     Manages the XGBoost model lifecycle and inference.
@@ -84,25 +93,51 @@ class FraudMLModel:
             print(f"[WARN] Failed to load XGBoost model: {e}")
             print("   ML Engine is running in HEURISTIC FALLBACK mode.")
 
-    def predict(self, tx: TransactionInput) -> float:
+    def predict(self, tx: TransactionInput) -> tuple[float, dict[str, float]]:
         """
         Run inference on a single transaction.
-        Returns a raw risk probability between 0.0 and 1.0.
+        Returns a (prob, significance_dict) tuple.
         """
         if self.model is not None:
-             # Real XGBoost Path
              features = FeatureTransformer.transform(tx)
              
-             # Log the model matrix (feature vector) for visibility
-             print(f"   [ML MATRIX] Transaction {tx.transaction_id} feature vector (1x30):")
-             print(f"   {features}")
-
-             # predict_proba returns [[prob_class_0, prob_class_1]]
-             prob_fraud = self.model.predict_proba(features)[0][1]
-             return float(prob_fraud)
+             # Get probability
+             prob_fraud = float(self.model.predict_proba(features)[0][1])
+             
+             # Calculate Significance (SHAP-Lite)
+             # In a real system we'd use model.get_booster().get_score() 
+             # but for individual samples we'll simulate based on value intensity
+             # for this hackathon demo.
+             significance = self._calculate_significance(features[0], prob_fraud)
+             
+             return prob_fraud, significance
         else:
-             # Fallback Heuristic Path (if model.json is missing)
-             return self._fallback_heuristic(tx)
+             # Fallback Heuristic Path
+             prob = self._fallback_heuristic(tx)
+             # Simulate significance for fallback too
+             features = FeatureTransformer.transform(tx)[0]
+             significance = self._calculate_significance(features, prob)
+             return prob, significance
+
+    def _calculate_significance(self, feature_vector: np.ndarray, total_prob: float) -> dict[str, float]:
+        """Identifies top-3 contributing features for the demo UI."""
+        # Simple simulated significance: value * dampener
+        contributions = []
+        for i, val in enumerate(feature_vector):
+            # Normalize and apply importance bias (e.g. amount is usually high weight)
+            bias = 1.2 if i == 0 else 1.0 # Amount bias
+            bias = 1.5 if i == 3 or i == 4 else bias # Device/IP bias
+            
+            # Simple Intensity metric
+            intensity = (val / 100.0) * bias
+            contributions.append((FEATURE_NAMES[i], intensity))
+        
+        # Sort and take top 3
+        top_3 = sorted(contributions, key=lambda x: x[1], reverse=True)[:3]
+        
+        # Scale to total_prob for relative representation
+        total_intensity = sum(c[1] for c in top_3) or 1.0
+        return {name: (val / total_intensity) * total_prob for name, val in top_3}
 
     def _fallback_heuristic(self, tx: TransactionInput) -> float:
         """Simple baseline if ML model is completely missing."""

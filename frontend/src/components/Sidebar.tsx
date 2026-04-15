@@ -8,6 +8,7 @@ export default function Sidebar() {
 
   const isDashboard = pathname === "/";
   const isInvestigation = pathname.startsWith("/investigate");
+  const isDemo = pathname.startsWith("/demo");
 
   return (
     <aside className="hidden md:flex flex-col w-64 h-full p-4 gap-2 bg-black font-['Inter'] text-sm font-medium rounded-r-lg border-r border-white/10 shrink-0">
@@ -21,11 +22,10 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1">
         <Link href="/">
           <div
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 ${
-              isDashboard
-                ? "text-white font-bold bg-white/10 scale-98"
-                : "text-gray-500 hover:text-white/70 hover:bg-white/5"
-            }`}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 ${isDashboard
+              ? "text-white font-bold bg-white/10 scale-98"
+              : "text-gray-500 hover:text-white/70 hover:bg-white/5"
+              }`}
           >
             <span className="material-symbols-outlined text-[20px]">
               dashboard
@@ -41,14 +41,26 @@ export default function Sidebar() {
         </div>
         <Link href="/investigate">
           <div
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 ${
-              isInvestigation
-                ? "text-white font-bold bg-white/10 scale-98"
-                : "text-gray-500 hover:text-white/70 hover:bg-white/5"
-            }`}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 ${isInvestigation
+              ? "text-white font-bold bg-white/10 scale-98"
+              : "text-gray-500 hover:text-white/70 hover:bg-white/5"
+              }`}
           >
             <span className="material-symbols-outlined text-[20px]">hub</span>
             <span>Graph Analysis</span>
+          </div>
+        </Link>
+        <Link href="/demo">
+          <div
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 ${isDemo
+              ? "text-white font-bold bg-white/10 scale-98"
+              : "text-gray-500 hover:text-white/70 hover:bg-white/5"
+              }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              play_circle
+            </span>
+            <span>Live Demo</span>
           </div>
         </Link>
         <div className="flex items-center gap-3 px-3 py-2 text-gray-500 hover:text-white/70 hover:bg-white/5 rounded-lg cursor-pointer transition-all duration-150">

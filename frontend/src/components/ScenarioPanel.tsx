@@ -21,10 +21,21 @@ export default function ScenarioPanel({ onScenarioResults }: ScenarioPanelProps)
   const [runningScenario, setRunningScenario] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/scenarios`)
-      .then((res) => res.json())
-      .then((data) => setScenarios(data.scenarios || []))
-      .catch(() => {
+    const loadScenarios = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/scenarios`, {
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setScenarios(data.scenarios || []);
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (err) {
+        console.warn("Could not load scenarios from backend, using fallback:", err);
         // Fallback built-in scenarios
         setScenarios([
           { id: "botnet_strike", name: "Botnet Strike", description: "Coordinated bot attack via shared devices.", icon: "🤖", severity: "CRITICAL", tx_count: 5 },
@@ -32,8 +43,11 @@ export default function ScenarioPanel({ onScenarioResults }: ScenarioPanelProps)
           { id: "money_laundering", name: "Money Laundering", description: "Structured deposits under $10K.", icon: "💰", severity: "HIGH", tx_count: 4 },
           { id: "identity_theft", name: "Identity Theft", description: "Stolen credentials from new locations.", icon: "🎭", severity: "HIGH", tx_count: 3 },
           { id: "rapid_cashout", name: "Rapid Cash-Out", description: "High-velocity account drain.", icon: "⚡", severity: "CRITICAL", tx_count: 6 },
+          { id: "financial_anvil", name: "Financial Anvil", description: "Stress test high-value audit flow.", icon: "⚒️", severity: "HIGH", tx_count: 13 },
         ]);
-      });
+      }
+    };
+    loadScenarios();
   }, []);
 
   const runScenario = useCallback(
@@ -43,13 +57,20 @@ export default function ScenarioPanel({ onScenarioResults }: ScenarioPanelProps)
       try {
         const res = await fetch(`${API_BASE}/simulate/scenario/${scenarioId}`, {
           method: "POST",
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
         });
         if (res.ok) {
           const data = await res.json();
           onScenarioResults(data.results || []);
+        } else {
+          console.error(`Scenario ${scenarioId} failed with status ${res.status}`);
         }
       } catch (err) {
-        console.error("Scenario failed:", err);
+        console.error("Scenario request failed:", err);
+        // Silently fail - backend might not be running
       } finally {
         setRunningScenario(null);
       }
@@ -76,9 +97,8 @@ export default function ScenarioPanel({ onScenarioResults }: ScenarioPanelProps)
             key={scenario.id}
             onClick={() => runScenario(scenario.id)}
             disabled={!!runningScenario}
-            className={`w-full text-left rounded-lg border px-4 py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group ${
-              SEVERITY_COLORS[scenario.severity] || SEVERITY_COLORS.MEDIUM
-            }`}
+            className={`w-full text-left rounded-lg border px-4 py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group ${SEVERITY_COLORS[scenario.severity] || SEVERITY_COLORS.MEDIUM
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">

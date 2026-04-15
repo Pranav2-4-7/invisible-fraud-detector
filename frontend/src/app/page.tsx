@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [latency, setLatency] = useState<number | null>(null);
   const [activeNodes, setActiveNodes] = useState(0);
   const [systemVersion, setSystemVersion] = useState("—");
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
 
   // Polling ref
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
@@ -155,6 +156,7 @@ export default function Dashboard() {
         subgraph_edges: result.graph_report.subgraph_edges,
         processing_time_ms: result.processing_time_ms,
         ml_risk_score: result.ml_risk_score,
+        ml_feature_significance: result.ml_feature_significance,
         risk_factors: result.risk_factors || [],
         geo_origin: result.geo_origin,
         geo_previous: result.geo_previous,
@@ -287,6 +289,7 @@ export default function Dashboard() {
   // ── Process scenario results ──
   const handleScenarioResults = useCallback(
     (results: unknown[]) => {
+      setLaserKey((k) => k + 1); // Trigger laser scan
       for (const r of results) {
         processResult(r as FraudAnalysisResult);
       }
@@ -355,7 +358,11 @@ export default function Dashboard() {
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
         >
           <div className="md:col-span-2 min-h-[300px]">
-            <GraphView nodes={graphNodes} edges={graphEdges} />
+            <GraphView 
+              nodes={graphNodes} 
+              edges={graphEdges} 
+              onNodeClick={setSelectedEntityId}
+            />
           </div>
 
           {/* ── Quick Actions Panel ── */}
@@ -480,6 +487,95 @@ export default function Dashboard() {
           ))}
         </AnimatePresence>
       </div>
+      {/* ── Entity Intelligence Sidebar ── */}
+      <AnimatePresence>
+        {selectedEntityId && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 h-full w-[400px] bg-black/95 backdrop-blur-2xl border-l border-white/10 z-[100] p-6 shadow-2xl flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <h2 className="text-xs font-black uppercase tracking-widest text-emerald-400">
+                  Entity Intelligence
+                </h2>
+              </div>
+              <button 
+                onClick={() => setSelectedEntityId(null)}
+                className="p-2 hover:bg-white/5 rounded-full transition-colors group"
+              >
+                <span className="material-symbols-outlined text-gray-500 group-hover:text-white transition-colors">close</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-8 pr-2 custom-scrollbar transition-all">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[10px] font-mono text-gray-500 uppercase block mb-1">Resource Identifier</span>
+                <p className="text-sm font-mono text-white break-all leading-relaxed">{selectedEntityId}</p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-bold uppercase text-gray-500 tracking-widest flex items-center gap-2">
+                  <span className="h-px flex-1 bg-white/5"></span>
+                  Security Posture
+                  <span className="h-px flex-1 bg-white/5"></span>
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[9px] text-gray-500 uppercase block mb-1">Reputation</span>
+                    <span className="text-xs font-black text-red-500 glow-red">FLAGGED</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[9px] text-gray-500 uppercase block mb-1">Confidence</span>
+                    <span className="text-xs font-black text-emerald-400">94.2%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-bold uppercase text-gray-500 tracking-widest flex items-center gap-2">
+                  <span className="h-px flex-1 bg-white/5"></span>
+                  Behavioral Fingerprint
+                  <span className="h-px flex-1 bg-white/5"></span>
+                </h3>
+                <div className="space-y-2">
+                  {[
+                    { label: "IP Velocity", val: "High (4/min)", color: "text-amber-400" },
+                    { label: "Device Trust", val: "Critical Fail", color: "text-red-500" },
+                    { label: "Impossible Travel", val: "Detected", color: "text-red-500" },
+                    { label: "User Age", val: "14 Days", color: "text-gray-400" },
+                  ].map((stat, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 group hover:border-white/10 transition-colors">
+                      <span className="text-[11px] text-gray-400">{stat.label}</span>
+                      <span className={`text-[11px] font-mono font-bold ${stat.color}`}>{stat.val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-red-950/10 border border-red-900/20">
+                <h4 className="text-[10px] font-bold text-red-500 uppercase mb-2">Threat Intelligence Note</h4>
+                <p className="text-[11px] text-gray-400 leading-relaxed italic">
+                  "Entity associated with known cluster 'Syndicate-Alpha'. Multi-vector anomalies detected across IP and Device chains."
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 space-y-3 pt-6 border-t border-white/5">
+               <button className="w-full py-3 bg-red-500 text-white text-[10px] font-black uppercase tracking-tighter rounded-lg hover:bg-red-600 transition-all shadow-lg shadow-red-500/20">
+                  TERMINATE_SESSION
+               </button>
+               <button className="w-full py-3 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-black uppercase tracking-tighter rounded-lg transition-all">
+                  DOWNLOAD_FORENSIC_PML
+               </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

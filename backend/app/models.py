@@ -139,6 +139,7 @@ class FraudAnalysisResult(BaseModel):
     
     # XAI risk breakdown
     risk_factors: list[RiskFactor] = []
+    ml_feature_significance: dict[str, float] = {} # Top contributing ML features
     
     # Geo-location
     geo_origin: Optional[GeoPoint] = None
