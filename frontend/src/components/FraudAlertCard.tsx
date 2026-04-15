@@ -98,7 +98,6 @@ function AlertItem({ alert }: { alert: FraudAlert }) {
                     <div className="text-sm font-bold text-white">{alert.cluster_size}</div>
                     <div className="text-[9px] text-white/30">Cluster Size</div>
                   </div>
-                  </div>
                 </div>
               </div>
 
